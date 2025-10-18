@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CareerSpark | AI Job Matches Platform</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Configure Tailwind for Inter font and custom colors -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary': '#0284c7', // Sky-600 Blue for branding
+                        'primary-dark': '#0369a1', // Sky-700
+                        'secondary': '#f97316', // Orange-600 for contrast
+                        'background': '#f8fafc', // Slate-50 light background
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    backgroundImage: {
+                        'hero-pattern': "linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('background.jpg')",
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Load Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <style>
+        /* Custom CSS for Mobile Menu Overlay and Hero Section */
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        
+        .header {
+            min-height: 100vh;
+            width: 100%;
+            background-image: var(--tw-bg-image);
+            background-position: center;
+            background-size: cover;
+            position: relative;
+        }
+        /* Mobile Menu Styling (Off-Canvas) */
+        
+        #navLinks {
+            position: fixed;
+            background: #0f172a;
+            /* Dark Blue Slate */
+            height: 100vh;
+            width: 250px;
+            top: 0;
+            right: -250px;
+            /* Initially hidden */
+            text-align: left;
+            z-index: 20;
+            transition: 1s;
+            padding-top: 5rem;
+            box-shadow: -5px 0 15px rgba(0, 0, 0, 0.5);
+        }
+        
+        #navLinks ul li {
+            padding: 8px 16px;
+        }
+        
+        #navLinks a {
+            color: #f8fafc;
+            display: block;
+            font-weight: 500;
+        }
+        
+        #navLinks .fa-xmark {
+            position: absolute;
+            top: 25px;
+            right: 25px;
+            color: #f8fafc;
+            font-size: 25px;
+            cursor: pointer;
+        }
+        /* Modal Specific Styles (Overriding Tailwind if necessary) */
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 50;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+        }
+        
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5vh auto;
+            /* Adjusted margin for better responsiveness */
+            padding: 20px 30px;
+            border-radius: 12px;
+            width: 95%;
+            max-width: 550px;
+            /* Increased max-width for the detailed form */
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
+        
+        @media (min-width: 768px) {
+            .modal-content {
+                margin: 10vh auto;
+            }
+        }
+        
+        .close-btn {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            position: absolute;
+            top: 10px;
+            right: 20px;
+        }
+        /* --- ADVANCED CHATBOT STYLES FOR A MODERN LOOK --- */
+        /* 1. Backdrop Blur Effect (Modern Glassmorphism) */
+        
+        #chatWindow {
+            /* To enable scroll/flex-grow in JS */
+            min-height: 200px;
+            /* Make the chat window slightly transparent for the blur effect */
+            background-color: rgba(255, 255, 255, 0.95);
+            /* The magic of modern UI: Blur the content behind the window */
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            /* Custom, layered shadow for depth */
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15), 0 3px 10px rgba(0, 0, 0, 0.1);
+            /* Initial state for transition */
+            transform: scale(0.95) translateY(10px);
+            opacity: 0;
+            transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+            transform-origin: bottom right;
+        }
+        /* 2. Show/Active state for the chat window */
+        
+        #chatWindow:not(.hidden) {
+            transform: scale(1) translateY(0);
+            opacity: 1;
+        }
+        /* 3. Floating Button Effect */
+        
+        #chatToggleBtn {
+            transition: all 0.3s ease;
+            /* Use a stronger, more vibrant shadow than the default Tailwind one */
+            box-shadow: 0 4px 15px rgba(249, 115, 22, 0.6);
+            /* Using the secondary color */
+        }
+        
+        #chatToggleBtn:hover {
+            box-shadow: 0 8px 25px rgba(249, 115, 22, 0.8);
+        }
+        /* 4. AI Thinking/Typing Indicator Animation */
+        
+        @keyframes typing-dots {
+            0%,
+            80%,
+            100% {
+                transform: scale(0);
+            }
+            40% {
+                transform: scale(1);
+            }
+        }
+        
+        .typing-indicator span {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            margin: 0 1px;
+            background-color: #0284c7;
+            /* Primary color */
+            border-radius: 50%;
+            animation: typing-dots 1.5s infinite ease-in-out;
+        }
+        
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+    </style>
+</head>
+
+<body class="antialiased">
+
+    <!-- HERO SECTION -->
+    <section class="header bg-hero-pattern bg-cover bg-no-repeat text-white">
+        <!-- Navigation Bar -->
+        <nav class="flex justify-between items-center px-4 py-4 md:px-10 lg:px-20 border-b border-white/10 backdrop-blur-sm">
+            <div class="flex items-center space-x-3">
+                <!-- Using placeholder for logo, replace with actual SVG/Image -->
+                <img src="https://placehold.co/40x40/0284c7/ffffff?text=CS" alt="CareerSpark Logo" class="h-10 w-10 rounded-full bg-white p-1">
+                <h1 class="text-2xl font-extrabold tracking-tight">careerspark</h1>
+            </div>
+
+            <!-- Desktop Nav Links -->
+            <div class="hidden lg:flex nav-link space-x-6 items-center">
+                <ul class="flex space-x-6 font-medium">
+                    <li><a href="#" class="hover:text-primary transition duration-300">HOME</a></li>
+                    <li><a href="#about" class="hover:text-primary transition duration-300">ABOUT</a></li>
+                    <li><a href="#features" class="hover:text-primary transition duration-300">SERVICE</a></li>
+                    <li><a href="#contact" class="hover:text-primary transition duration-300">CONTACT</a></li>
+
+                </ul>
+                <div class="flex space-x-3">
+                    <button id="signupBtn" class="px-5 py-2.5 bg-secondary text-white font-semibold rounded-full hover:bg-orange-700 transition duration-300 shadow-lg shadow-secondary/30">Sign Up</button>
+                    <button id="loginBtn" class="px-5 py-2.5 bg-primary text-white font-semibold rounded-full hover:bg-primary-dark transition duration-300 shadow-lg shadow-primary/30">Login</button>
+                </div>
+            </div>
+
+            <!-- Mobile Menu Icons -->
+            <div class="lg:hidden flex items-center space-x-3">
+                <button onclick="showMenu()" class="text-2xl hover:text-primary transition duration-300" aria-label="Open Menu">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Mobile Nav Links (Off-Canvas) -->
+        <div id="navLinks" class="lg:hidden">
+            <i class="fa-solid fa-xmark" onclick="hidemenu()" aria-label="Close Menu"></i>
+            <ul class="mt-10 space-y-4">
+                <li><a href="#" onclick="hidemenu()">HOME</a></li>
+                <li><a href="#about" onclick="hidemenu()">ABOUT</a></li>
+                <li><a href="#features" onclick="hidemenu()">SERVICE</a></li>
+                <li><a href="#contact" onclick="hidemenu()">CONTACT</a></li>
+
+            </ul>
+            <div class="flex flex-col space-y-4 p-4 mt-8">
+                <button id="mobileSignupBtn" class="px-5 py-3 bg-secondary text-white font-semibold rounded-full hover:bg-orange-700 transition duration-300">Sign Up</button>
+                <button id="mobileLoginBtn" class="px-5 py-3 bg-primary text-white font-semibold rounded-full hover:bg-primary-dark transition duration-300">Login</button>
+            </div>
+        </div>
+
+
+        <!-- Hero Text Box -->
+        <div class="text-box absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center w-11/12 max-w-4xl">
+            <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight mb-6">Secure Your Future: AI-Powered Intelligent Career Matching</h1>
+            <p class="text-lg mb-8 font-light text-gray-200">Our Verified AI platform uses Proprietary algorithms to connect Qualified talent with Vetted opportunities, ensuring a Predictive and Long-Term professional fit.</p>
+            <a href="#" id="getStartedCta" class="inline-block px-10 py-4 bg-primary text-white text-xl font-bold rounded-full hover:bg-primary-dark transition duration-300 shadow-xl shadow-primary/40 uppercase tracking-wider transform hover:scale-105">START VERIFICATION</a>
+        </div>
+    </section>
+
+    <!-- ABOUT SECTION -->
+    <section id="about" class="py-16 md:py-24 px-4 sm:px-8 lg:px-20 bg-background">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl font-extrabold text-gray-900 mb-2">ABOUT</h2>
+            <p class="text-gray-500 max-w-3xl mx-auto">Discover the principles driving CareerSpark's mission to revolutionize professional connections through trusted AI and verified opportunity matching.</p>
+        </div>
+        <div class="girdapply lg:grid lg:grid-cols-2 lg:gap-16 items-center">
+            <div class="about-content mb-10 lg:mb-0">
+                <div class="content-left rounded-xl overflow-hidden shadow-2xl shadow-primary/10">
+                    <!-- Placeholder image for path.jpeg -->
+                    <img src="about.png" alt="Our team mission" class="w-full h-auto object-cover transform hover:scale-105 transition duration-500 ease-in-out">
+                </div>
+            </div>
+            <div class="content-right space-y-8">
+                <div class="p-6 bg-white rounded-xl shadow-md border-t-4 border-primary">
+                    <h3 class="text-xl font-bold text-primary mb-2 flex items-center"><i class="fa-solid fa-rocket mr-3"></i> Our Mission</h3>
+                    <p class="text-gray-700">To eliminate career misalignment by leveraging proprietary AI to ensure every professional lands in a role where they can thrive long-term. We build trust through verification and precision.</p>
+                </div>
+                <div class="p-6 bg-white rounded-xl shadow-md border-t-4 border-secondary">
+                    <h3 class="text-xl font-bold text-secondary mb-2 flex items-center"><i class="fa-solid fa-eye mr-3"></i> Our Vision</h3>
+                    <p class="text-gray-700">To be the global gold standard for career development and recruitment, where AI not only matches skills but also predicts cultural and professional synergy, driving the future of work.</p>
+                </div>
+                <div class="p-6 bg-white rounded-xl shadow-md border-t-4 border-gray-400 hidden sm:block">
+                    <h3 class="text-xl font-bold text-gray-700 mb-2 flex items-center"><i class="fa-solid fa-handshake-angle mr-3"></i> Our Values</h3>
+                    <p class="text-gray-700">Integrity, Innovation, and Impact. We commit to transparent processes, continuous technological advancement, and maximizing the positive career outcome for every user.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- ABOUT END -->
+
+
+    <!-- FEATURES SECTION -->
+    <section id="features" class="py-16 md:py-24 px-4 sm:px-8 lg:px-20 bg-gray-50">
+        <div class="text-center mb-12">
+            <h1 class="text-4xl font-extrabold text-gray-900 mb-3">What We Provide</h1>
+            <p class="text-gray-500 text-lg max-w-2xl mx-auto">Harness the power of AI tools designed to optimize every stage of your career journey.</p>
+        </div>
+
+        <div class="row grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- Feature 1 -->
+            <div class="feature-clo p-6 bg-white rounded-xl shadow-lg border-b-4 border-primary hover:shadow-xl transition duration-300 transform hover:-translate-y-1">
+                <i class="fa-solid fa-brain text-primary text-3xl mb-3"></i>
+                <h3 class="text-xl font-bold text-gray-900 mb-2">AI CAREER PREDICTION</h3>
+                <P class="text-gray-600">Our predictive models analyze your profile and market trends to forecast optimal career paths, minimizing risk and maximizing success.</P>
+            </div>
+            <!-- Feature 2 -->
+            <div class="feature-clo p-6 bg-white rounded-xl shadow-lg border-b-4 border-primary hover:shadow-xl transition duration-300 transform hover:-translate-y-1">
+                <i class="fa-solid fa-briefcase text-primary text-3xl mb-3"></i>
+                <h3 class="text-xl font-bold text-gray-900 mb-2">INTERNSHIP FINDER AND MATCHER</h3>
+                <P class="text-gray-600">Instantly match with verified internships that align perfectly with your curriculum and long-term career goals. Filter by location, pay, and duration.</P>
+            </div>
+            <!-- Feature 3 -->
+            <div class="feature-clo p-6 bg-white rounded-xl shadow-lg border-b-4 border-primary hover:shadow-xl transition duration-300 transform hover:-translate-y-1">
+                <i class="fa-solid fa-file-invoice text-primary text-3xl mb-3"></i>
+                <h3 class="text-xl font-bold text-gray-900 mb-2">RESUME ANALYZER</h3>
+                <P class="text-gray-600">Receive instant, AI-driven feedback on your resume against real job descriptions, helping you optimize for ATS and recruiter visibility.</P>
+            </div>
+            <!-- Feature 4 -->
+            <div class="feature-clo p-6 bg-white rounded-xl shadow-lg border-b-4 border-primary hover:shadow-xl transition duration-300 transform hover:-translate-y-1">
+                <i class="fa-solid fa-user-tie text-primary text-3xl mb-3"></i>
+                <h3 class="text-xl font-bold text-gray-900 mb-2">MENTORSHIP HUB</h3>
+                <P class="text-gray-600">Connect with industry veterans for personalized guidance, skill development, and networking opportunities. Find a mentor who understands your niche.</P>
+            </div>
+            <!-- Feature 5 -->
+            <div class="feature-clo p-6 bg-white rounded-xl shadow-lg border-b-4 border-primary hover:shadow-xl transition duration-300 transform hover:-translate-y-1">
+                <i class="fa-solid fa-chart-line text-primary text-3xl mb-3"></i>
+                <h3 class="text-xl font-bold text-gray-900 mb-2">SKILL PROGRESS TRACKER</h3>
+                <P class="text-gray-600">Visualize your skill development against industry benchmarks and job requirements to pinpoint areas for improvement and certification.</P>
+            </div>
+            <!-- Feature 6 -->
+            <div class="feature-clo p-6 bg-white rounded-xl shadow-lg border-b-4 border-primary hover:shadow-xl transition duration-300 transform hover:-translate-y-1">
+                <i class="fa-solid fa-headset text-primary text-3xl mb-3"></i>
+                <h3 class="text-xl font-bold text-gray-900 mb-2">24/7 AI CHAT SUPPORT</h3>
+                <P class="text-gray-600">Get instant answers to career questions, technical support, and platform help anytime, ensuring your journey is seamless.</P>
+            </div>
+        </div>
+    </section>
+    <!-- FEATURES END -->
+
+
+    <!-- TESTIMONIALS SECTION -->
+    <section class="testimonial py-16 md:py-24 px-4 sm:px-8 lg:px-20 bg-white">
+        <div class="text-center mb-12">
+            <h1 class="text-4xl font-extrabold text-gray-900 mb-3">Success Stories</h1>
+            <p class="text-gray-500 text-lg max-w-2xl mx-auto">Hear from the talent and companies that achieved their long-term goals with CareerSpark's precision matching.</p>
+        </div>
+
+        <div class="row grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- Testimonial 1 -->
+            <div class="testimonial-col p-6 bg-gray-50 rounded-xl shadow-md flex flex-col md:flex-row items-center space-x-4">
+                <!-- Placeholder image for user1.jpg -->
+                <img src="https://placehold.co/100x100/38bdf8/ffffff?text=M" alt="Manjulika" class="w-20 h-20 rounded-full object-cover mb-4 md:mb-0 flex-shrink-0">
+                <div class="text-center md:text-left">
+                    <p class="text-gray-700 italic mb-3 text-sm">"The AI matching was incredible. I was tired of generic job boards, but CareerSpark connected me to a role that truly fit my unique skill set. Game changer!"</p>
+                    <h3 class="text-lg font-bold text-gray-900">Manjulika Sen</h3>
+                    <div class="text-secondary text-sm space-x-0.5 mt-1">
+                        <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star-half-stroke"></i>
+                    </div>
+                </div>
+            </div>
+            <!-- Testimonial 2 -->
+            <div class="testimonial-col p-6 bg-gray-50 rounded-xl shadow-md flex flex-col md:flex-row items-center space-x-4">
+                <!-- Placeholder image for user2.jpg -->
+                <img src="https://placehold.co/100x100/38bdf8/ffffff?text=S" alt="Sumit Mohapatra" class="w-20 h-20 rounded-full object-cover mb-4 md:mb-0 flex-shrink-0">
+                <div class="text-center md:text-left">
+                    <p class="text-gray-700 italic mb-3 text-sm">"We saved months of recruitment time and reduced our turnover significantly. The verified talent pool is exactly what our specialized team needed."</p>
+                    <h3 class="text-lg font-bold text-gray-900">Sumit Mohapatra, CEO</h3>
+                    <div class="text-secondary text-sm space-x-0.5 mt-1">
+                        <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+                    </div>
+                </div>
+            </div>
+            <!-- Testimonial 3 -->
+            <div class="testimonial-col p-6 bg-gray-50 rounded-xl shadow-md flex flex-col md:flex-row items-center space-x-4">
+                <!-- Placeholder image for user3.jpg -->
+                <img src="https://placehold.co/100x100/38bdf8/ffffff?text=R" alt="Rahul Sethi" class="w-20 h-20 rounded-full object-cover mb-4 md:mb-0 flex-shrink-0">
+                <div class="text-center md:text-left">
+                    <p class="text-gray-700 italic mb-3 text-sm">"Finding a mentor was so straightforward. The Hub paired me with an expert who fast-tracked my progress in my desired industry. Highly recommended!"</p>
+                    <h3 class="text-lg font-bold text-gray-900">Rahul Sethi</h3>
+                    <div class="text-secondary text-sm space-x-0.5 mt-1">
+                        <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star-half-stroke"></i><i class="fa-regular fa-star"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- TESTIMONIALS END -->
+
+    <!-- CALL TO ACTION / CONTACT FORM -->
+    <section id="contact" class="contact-section py-16 md:py-24 px-4 sm:px-8 lg:px-20 bg-background">
+        <div class="contact-form-wrapper max-w-4xl mx-auto bg-white rounded-xl shadow-2xl overflow-hidden lg:grid lg:grid-cols-2">
+            <div class="contact-content p-8 md:p-12 lg:p-16 bg-primary lg:rounded-r-none text-white flex flex-col justify-center">
+                <p class="pre-header text-sm font-semibold uppercase opacity-80 mb-2">NEED HELP?</p>
+                <h2 class="section-title text-3xl md:text-4xl font-extrabold mb-4">Ready to Spark Your Career?</h2>
+                <p class="mb-6 font-light">Whether you have technical questions or partnership inquiries, reach out to our team. We're here to help you navigate the future of work.</p>
+                <a href="#" class="inline-block px-6 py-3 bg-white text-primary font-semibold rounded-full hover:bg-gray-100 transition duration-300 self-start">Get Started Today <i class="fa-solid fa-arrow-right ml-2"></i></a>
+            </div>
+
+            <div class="contact-form-area p-8 md:p-12 lg:p-16">
+                <h3 class="text-2xl font-bold text-gray-900 mb-6">Send Us A Message</h3>
+                <form action="#" method="POST" class="contact-form space-y-4">
+
+                    <div class="input-group grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <input type="text" name="name" placeholder="Your Full Name" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary transition duration-300">
+                        <input type="email" name="email" placeholder="Your Work Email" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary transition duration-300">
+                    </div>
+
+                    <textarea name="message" placeholder="Type your detailed message here..." rows="6" required class="full-width-input w-full p-3 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary transition duration-300"></textarea>
+
+                    <button type="submit" class="submit-button w-full px-6 py-3 bg-secondary text-white font-bold rounded-lg hover:bg-orange-700 transition duration-300 shadow-lg shadow-secondary/30 transform hover:scale-[1.01]">
+                        Send Message
+                    </button>
+                </form>
+            </div>
+        </div>
+    </section>
+    <!-- CALL TO ACTION END -->
+
+
+    <!-- FOOTER -->
+    <footer class="footer py-12 px-4 sm:px-8 lg:px-20 bg-gray-900 text-gray-300 text-center">
+        <h4 class="text-2xl font-bold mb-3 text-white">CareerSpark</h4>
+        <p class="max-w-xl mx-auto mb-6 text-sm">We are revolutionizing recruitment by using verified AI to ensure long-term, predictive career success for both candidates and employers.</p>
+        <div class="icon space-x-6 text-xl mb-6">
+            <a href="#" aria-label="Facebook" class="hover:text-primary transition duration-300"><i class="fa-brands fa-facebook-f"></i></a>
+            <a href="#" aria-label="Twitter" class="hover:text-primary transition duration-300"><i class="fa-brands fa-x-twitter"></i></a>
+            <a href="#" aria-label="Instagram" class="hover:text-primary transition duration-300"><i class="fa-brands fa-instagram"></i></a>
+            <a href="#" aria-label="LinkedIn" class="hover:text-primary transition duration-300"><i class="fa-brands fa-linkedin-in"></i></a>
+        </div>
+        <p class="text-sm border-t border-gray-700 pt-6">Made with <i class="fa-solid fa-heart text-secondary mx-1"></i> by team ek4m. &copy; 2024</p>
+
+        <div id="aiChatbot" class="fixed bottom-6 right-6 z-50">
+
+            <button id="chatToggleBtn" class="bg-secondary text-white w-14 h-14 rounded-full shadow-2xl flex items-center justify-center text-2xl hover:bg-orange-700 transition duration-300 transform hover:scale-105" aria-label="Open Chatbot">
+            <i class="fa-solid fa-comments"></i>
+        </button>
+
+            <div id="chatWindow" class="hidden absolute bottom-20 right-0 w-80 md:w-96 bg-white rounded-xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden">
+
+                <div class="bg-primary text-white p-4 flex justify-between items-center rounded-t-xl">
+                    <h4 class="font-bold text-lg">CareerSpark AI Assistant</h4>
+                    <button id="chatCloseBtn" class="text-white hover:text-gray-200" aria-label="Close Chatbot">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+                </div>
+
+                <div id="chatMessages" class="flex-grow p-4 space-y-4 overflow-y-auto" style="max-height: 400px; min-height: 200px;">
+                    <div class="flex justify-start">
+                        <div class="bg-gray-200 p-3 rounded-xl rounded-bl-none max-w-[80%] text-sm">
+                            Hello! I'm your AI Career Assistant. How can I help you spark your career today?
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-4 border-t border-gray-200">
+                    <form id="chatForm" class="flex space-x-2">
+                        <input type="text" id="chatInput" placeholder="Ask me anything..." class="flex-grow p-3 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary text-sm" required>
+                        <button type="submit" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition duration-300" aria-label="Send Message">
+                        <i class="fa-solid fa-paper-plane"></i>
+                    </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+    </footer>
+    <!-- FOOTER END -->
+
+
+    <!-- AUTH MODAL (Login/Signup Pop-up) -->
+    <div id="authModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()" aria-label="Close Modal">&times;</span>
+
+            <div class="tabs flex justify-center space-x-4 mb-6 border-b border-gray-200">
+                <button id="showSignupTab" class="tab-button active font-semibold text-lg py-2 px-4 border-b-2 border-primary text-primary transition duration-300">Sign Up</button>
+                <button id="showLoginTab" class="tab-button font-semibold text-lg py-2 px-4 border-b-2 border-transparent text-gray-500 hover:text-primary transition duration-300">Login</button>
+            </div>
+
+            <!-- Sign Up Form Content (Detailed, Role-Conditional Form) -->
+            <div id="signupFormContent" class="tab-panel active-tab space-y-4">
+                <h2 class="text-2xl font-bold text-center mb-4 text-gray-900">Establish Your Verified CareerSpark Profile</h2>
+                <p class="text-sm text-center text-gray-600 mb-6">Start your verification process to unlock AI matching. All fields marked with <span class="text-red-500">*</span> are mandatory.</p>
+
+                <form id="signupForm" action="#" class="space-y-4">
+
+                    <!-- Role Selection -->
+                    <div class="form-group">
+                        <label for="userRole" class="block text-sm font-medium text-gray-700 mb-1">I am a: <span class="text-red-500">*</span></label>
+                        <select id="userRole" class="w-full p-3 border border-gray-300 rounded-lg bg-white focus:ring-primary focus:border-primary transition duration-300 shadow-sm" required>
+                            <option value="">-- Select Role --</option>
+                            <option value="student">Seeking Opportunities (Student/Job Seeker)</option>
+                            <option value="employer">Hiring Authority (Employer)</option>
+                        </select>
+                    </div>
+
+                    <!-- Credentials -->
+                    <div class="form-group">
+                        <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Secure Email Address <span class="text-red-500">*</span></label>
+                        <input type="email" id="email" name="email" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary transition duration-300 shadow-sm" required placeholder="name@example.com">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password <span class="text-red-500">*</span></label>
+                        <input type="password" id="password" name="password" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary transition duration-300 shadow-sm" required placeholder="Minimum 8 characters">
+                        <small id="passwordHint" class="block text-xs mt-1 text-gray-500">Must contain at least one number, one uppercase, and one lowercase letter, and be at least 8 characters long.</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="confirm-password" class="block text-sm font-medium text-gray-700 mb-1">Confirm Password <span class="text-red-500">*</span></label>
+                        <input type="password" id="confirm-password" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary transition duration-300 shadow-sm" required placeholder="Repeat your password">
+                    </div>
+
+                    <!-- Conditional Student Fields -->
+                    <div id="studentFields" class="conditional-fields hidden bg-blue-50 p-4 rounded-lg border border-blue-200 space-y-4">
+                        <h3 class="text-lg font-bold text-primary mb-2 border-b pb-2">Seeking Opportunities Details</h3>
+                        <div class="form-group">
+                            <label for="studentName" class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                            <input type="text" id="studentName" name="studentName" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary transition duration-300 shadow-sm" placeholder="John Doe">
+                        </div>
+                        <div class="form-group">
+                            <label for="studentId" class="block text-sm font-medium text-gray-700 mb-1">Upload ID/Verification Document (JPG/PNG/PDF)</label>
+                            <input type="file" id="studentId" name="studentId" accept=".jpg,.jpeg,.png,.pdf" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-primary-dark cursor-pointer">
+                            <small class="block text-xs mt-1 text-blue-600">Required for account verification. Confidential and secure.</small>
+                        </div>
+                    </div>
+
+                    <!-- Conditional Employer Fields -->
+                    <div id="employerFields" class="conditional-fields hidden bg-orange-50 p-4 rounded-lg border border-orange-200 space-y-4">
+                        <h3 class="text-lg font-bold text-secondary mb-2 border-b pb-2">Hiring Authority Details</h3>
+                        <div class="form-group">
+                            <label for="companyName" class="block text-sm font-medium text-gray-700 mb-1">Company Name</label>
+                            <input type="text" id="companyName" name="companyName" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary transition duration-300 shadow-sm" placeholder="TechCorp Innovations">
+                        </div>
+                        <div class="form-group">
+                            <label for="contactName" class="block text-sm font-medium text-gray-700 mb-1">Primary Contact Name</label>
+                            <input type="text" id="contactName" name="contactName" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary transition duration-300 shadow-sm" placeholder="Jane Smith, HR Manager">
+                        </div>
+                    </div>
+
+                    <!-- Terms Checkbox -->
+                    <div class="form-group flex items-center pt-2">
+                        <input type="checkbox" id="terms" required class="h-4 w-4 text-primary rounded border-gray-300 focus:ring-primary">
+                        <label for="terms" class="ml-2 block text-sm text-gray-700">I agree to the <a href="#" class="text-primary hover:underline font-medium">Terms & Conditions</a> and understand my data will be used for security authentication. <span class="text-red-500">*</span></label>
+                    </div>
+
+                    <button type="submit" class="w-full py-3 bg-secondary text-white font-bold rounded-lg hover:bg-orange-700 transition duration-300 shadow-lg shadow-secondary/30 transform hover:scale-[1.01]">
+                        Complete Verification and Sign Up
+                    </button>
+
+                    <div id="formMessage" class="hidden p-3 rounded-lg text-center font-medium"></div>
+
+                </form>
+            </div>
+
+            <!-- Login Form Content -->
+            <div id="loginFormContent" class="tab-panel space-y-4 hidden">
+                <h2 class="text-2xl font-bold text-center mb-4">Welcome Back!</h2>
+                <form id="loginForm" class="space-y-4">
+                    <div class="form-group">
+                        <input type="email" id="loginEmail" placeholder="Email Address" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="password" id="loginPassword" placeholder="Password" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary" required>
+                    </div>
+                    <button type="submit" class="w-full py-3 bg-primary text-white font-bold rounded-lg hover:bg-primary-dark transition duration-300">Login</button>
+                    <p class="forgot-link text-center text-sm mt-3">
+                        <a href="#" class="text-primary hover:underline">Forgot Password?</a>
+                    </p>
+                </form>
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+    <!-- JAVASCRIPT FOR INTERACTIVITY -->
+    <script>
+        const navLinks = document.getElementById("navLinks");
+        const authModal = document.getElementById("authModal");
+        const getStartedCta = document.getElementById("getStartedCta");
+        const signupBtn = document.getElementById("signupBtn");
+        const loginBtn = document.getElementById("loginBtn");
+        const mobileSignupBtn = document.getElementById("mobileSignupBtn");
+        const mobileLoginBtn = document.getElementById("mobileLoginBtn");
+        const closeBtn = document.querySelector(".close-btn");
+
+        // --- Mobile Menu Toggle Functions ---
+        function showMenu() {
+            navLinks.style.right = "0";
+        }
+
+        function hidemenu() {
+            navLinks.style.right = "-250px";
+        }
+
+        // --- Modal Functions ---
+        function openModal() {
+            authModal.style.display = "block";
+            // Ensure body does not scroll while modal is open
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            authModal.style.display = "none";
+            document.body.style.overflow = 'auto';
+            // Clear any lingering messages when closing
+            const formMessage = document.getElementById('formMessage');
+            if (formMessage) {
+                formMessage.classList.add('hidden');
+            }
+        }
+
+        // Click handlers to open the modal
+        signupBtn.addEventListener('click', () => {
+            openModal();
+            showTab('signup');
+        });
+        loginBtn.addEventListener('click', () => {
+            openModal();
+            showTab('login');
+        });
+        mobileSignupBtn.addEventListener('click', () => {
+            openModal();
+            showTab('signup');
+            hidemenu();
+        });
+        mobileLoginBtn.addEventListener('click', () => {
+            openModal();
+            showTab('login');
+            hidemenu();
+        });
+        closeBtn.addEventListener('click', closeModal);
+
+        // Close modal when user clicks outside of it
+        window.addEventListener('click', (event) => {
+            if (event.target === authModal) {
+                closeModal();
+            }
+        });
+
+        getStartedCta.addEventListener('click', (event) => {
+            event.preventDefault(); // Prevent jump to #signup
+            openModal();
+            showTab('signup');
+        });
+
+        // --- Modal Tab Switching ---
+        const signupTab = document.getElementById('showSignupTab');
+        const loginTab = document.getElementById('showLoginTab');
+        const signupContent = document.getElementById('signupFormContent');
+        const loginContent = document.getElementById('loginFormContent');
+
+        function showTab(tabName) {
+            // Reset styles
+            signupTab.classList.remove('active', 'border-primary', 'text-primary');
+            signupTab.classList.add('border-transparent', 'text-gray-500');
+            loginTab.classList.remove('active', 'border-primary', 'text-primary');
+            loginTab.classList.add('border-transparent', 'text-gray-500');
+            signupContent.classList.add('hidden');
+            loginContent.classList.add('hidden');
+
+            if (tabName === 'signup') {
+                signupTab.classList.add('active', 'border-primary', 'text-primary');
+                signupTab.classList.remove('border-transparent', 'text-gray-500');
+                loginTab.classList.remove('border-primary', 'text-primary');
+                loginTab.classList.add('border-transparent', 'text-gray-500');
+                signupContent.classList.remove('hidden');
+                loginContent.classList.add('hidden');
+            } else if (tabName === 'login') {
+                loginTab.classList.add('active', 'border-primary', 'text-primary');
+                loginTab.classList.remove('border-transparent', 'text-gray-500');
+                signupTab.classList.remove('border-primary', 'text-primary');
+                signupTab.classList.add('border-transparent', 'text-gray-500');
+                loginContent.classList.remove('hidden');
+                signupContent.classList.add('hidden');
+                // Ensure default login tab is set when switching to login
+                handleLoginRoleChange('student');
+            }
+        }
+
+        // Attach listeners for tab buttons
+        signupTab.addEventListener('click', () => showTab('signup'));
+        loginTab.addEventListener('click', () => showTab('login'));
+
+
+
+
+        // Initialize: Ensure the signup tab is shown on load if the modal opens
+        window.addEventListener('load', () => {
+            showTab('signup');
+        });
+
+
+
+
+        // --- New Signup Form Logic ---
+
+        const userRole = document.getElementById('userRole');
+        const studentFields = document.getElementById('studentFields');
+        const employerFields = document.getElementById('employerFields');
+        const signupForm = document.getElementById('signupForm');
+        const passwordInput = document.getElementById('password');
+        const confirmPasswordInput = document.getElementById('confirm-password');
+        const formMessage = document.getElementById('formMessage');
+
+        // Function to display form messages
+        function displayMessage(message, isSuccess = false) {
+            formMessage.textContent = message;
+            formMessage.classList.remove('hidden', 'bg-red-100', 'text-red-700', 'bg-green-100', 'text-green-700');
+
+            if (isSuccess) {
+                formMessage.classList.add('bg-green-100', 'text-green-700');
+            } else {
+                formMessage.classList.add('bg-red-100', 'text-red-700');
+            }
+        }
+
+        // 1. Conditional Field Display
+        function handleRoleChange() {
+            const role = userRole.value;
+
+            // Hide all conditional fields first
+            studentFields.classList.add('hidden');
+            employerFields.classList.add('hidden');
+
+            // Set required attributes based on role selection
+            const studentInputs = studentFields.querySelectorAll('input, select');
+            const employerInputs = employerFields.querySelectorAll('input, select');
+
+            studentInputs.forEach(input => input.removeAttribute('required'));
+            employerInputs.forEach(input => input.removeAttribute('required'));
+
+            if (role === 'student') {
+                studentFields.classList.remove('hidden');
+                // Make name and ID card required for verification
+                document.getElementById('studentName').setAttribute('required', 'required');
+                document.getElementById('studentId').setAttribute('required', 'required');
+            } else if (role === 'employer') {
+                employerFields.classList.remove('hidden');
+                // Make company name and contact name required
+                document.getElementById('companyName').setAttribute('required', 'required');
+                document.getElementById('contactName').setAttribute('required', 'required');
+            }
+        }
+
+        userRole.addEventListener('change', handleRoleChange);
+        window.addEventListener('load', handleRoleChange); // Run on load to set initial state
+
+        // 2. Password Validation and Form Submission
+        signupForm.addEventListener('submit', (event) => {
+            event.preventDefault(); // Stop default form submission
+
+            formMessage.classList.add('hidden'); // Clear previous messages
+
+            const password = passwordInput.value;
+            const confirmPassword = confirmPasswordInput.value;
+
+            // Simple Password Pattern Check (for front-end demonstration)
+            // Must contain at least one number, one uppercase, one lowercase letter, and be at least 8 characters long.
+            const passwordPattern = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}$/;
+
+            if (!passwordPattern.test(password)) {
+                displayMessage('Password does not meet complexity requirements. Please check the hint below the password field.');
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                displayMessage('Passwords do not match. Please ensure both fields are identical.');
+                return;
+            }
+
+            if (userRole.value === "") {
+                displayMessage('Please select your role (Seeking Opportunities or Hiring Authority) to proceed.');
+                return;
+            }
+
+            //sucess//
+            // --- SUCCESS ---
+            // If all validation passes, log the successful signup data 
+            console.log("Signup successful!");
+
+            // 1. Get the user's selected role
+            const selectedRole = userRole.value;
+
+            // 2. Display success message
+            displayMessage('Success! Redirecting to your dashboard...', true);
+
+            // 3. Clear the form and reset the fields
+            signupForm.reset();
+            handleRoleChange();
+
+            // 4. Redirect the user based on their role after a short delay (e.g., 2 seconds)
+            setTimeout(() => {
+                if (selectedRole === 'student') {
+                    // Redirect to the student dashboard
+                    window.location.href = 'studentdashboard.html';
+                } else if (selectedRole === 'employer') {
+                    // Redirect to the employer dashboard (using the filename you provided)
+                    window.location.href = 'empoyleerdash.html';
+                } else {
+                    // Fallback: If no role is selected (should be caught by validation), just close modal or go to login
+                    closeModal();
+                    showTab('login');
+                }
+            }, 2000); // 2-second delay
+        });
+        // --- AI Chatbot Logic ---
+        const chatToggleBtn = document.getElementById('chatToggleBtn');
+        const chatWindow = document.getElementById('chatWindow');
+        const chatCloseBtn = document.getElementById('chatCloseBtn');
+        const chatForm = document.getElementById('chatForm');
+        const chatInput = document.getElementById('chatInput');
+        const chatMessages = document.getElementById('chatMessages');
+
+        // Toggle the chat window visibility
+        chatToggleBtn.addEventListener('click', () => {
+            chatWindow.classList.toggle('hidden');
+        });
+
+        // Close button functionality
+        chatCloseBtn.addEventListener('click', () => {
+            chatWindow.classList.add('hidden');
+        });
+
+        // Function to add a message to the chat window
+        function appendMessage(message, isUser = false) {
+            const messageContainer = document.createElement('div');
+            messageContainer.className = `flex ${isUser ? 'justify-end' : 'justify-start'}`;
+
+            const messageBubble = document.createElement('div');
+            messageBubble.className = `p-3 rounded-xl max-w-[80%] text-sm ${
+                isUser 
+                ? 'bg-primary text-white rounded-br-none' 
+                : 'bg-gray-200 text-gray-800 rounded-bl-none'
+            }`;
+            messageBubble.textContent = message;
+
+            messageContainer.appendChild(messageBubble);
+            chatMessages.appendChild(messageContainer);
+
+            // Scroll to the latest message
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // Handle sending a message
+        chatForm.addEventListener('submit', async(event) => {
+            event.preventDefault();
+
+            const userMessage = chatInput.value.trim();
+            if (userMessage === '') return;
+
+            // 1. Display user message
+            appendMessage(userMessage, true);
+            chatInput.value = ''; // Clear input
+
+            // 2. Display 'Typing...' message
+            // 2. Display ANIMATED 'Typing...' message
+            const typingIndicator = document.createElement('div');
+            typingIndicator.id = 'typingIndicator';
+            typingIndicator.className = 'flex justify-start';
+            typingIndicator.innerHTML = `
+                <div class="bg-gray-200 p-3 rounded-xl rounded-bl-none text-sm italic text-gray-600 flex items-center space-x-1">
+                    <span class="typing-indicator">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </span>
+                    <span>AI is thinking...</span>
+                </div>
+            `;
+            chatMessages.appendChild(typingIndicator);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            // 3. Get AI response (Placeholder for API call)
+            const aiResponse = await getAiResponse(userMessage);
+
+            // 4. Remove typing indicator
+            typingIndicator.remove();
+
+            // 5. Display AI response
+            appendMessage(aiResponse, false);
+        });
+        // --- API INTEGRATION: Updated function to call a secure backend ---
+        /**
+         * Function to call your SECURE BACKEND ENDPOINT (e.g., /api/chat).
+         * This function assumes you have a server running that proxies the request to OpenAI.
+         * * @param {string} userQuery - The message from the user.
+         * @returns {Promise<string>} - The AI's response message.
+         */
+        async function getAiResponse(userQuery) {
+            const backendEndpoint = '/api/chat'; // <-- Change this if your server endpoint is different
+
+            try {
+                // 1. Send the user's message to your secure backend
+                const response = await fetch(backendEndpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    // Send the user's query and optionally, previous chat history for context
+                    body: JSON.stringify({
+                        message: userQuery
+                    }),
+                });
+
+                // 2. Check if the server responded successfully (HTTP status 200-299)
+                if (!response.ok) {
+                    console.error('Backend Error Response Status:', response.status);
+                    throw new Error(`Server connection failed with status: ${response.status}`);
+                }
+
+                // 3. Parse the JSON response from your backend
+                const data = await response.json();
+
+                // 4. Return the AI's response text (field name depends on your server code)
+                // We assume your server sends the final AI text back in a field called 'ai_text_response'
+                return data.ai_text_response || "Sorry, I received a response, but it was empty.";
+
+            } catch (error) {
+                console.error('Chatbot API Fetch Error:', error);
+                // 5. Return a user-friendly error message if the connection or API fails
+                return "Apologies, I'm facing a technical issue connecting to the AI. Please try again in a moment.";
+            }
+        }
+    </script>
+
+</body>
+
+</html>
