@@ -1,4 +1,0 @@
- // If all validation passes, log the successful signup data (in a real app, this is where you'd call a Firebase/API function) console.log("Signup successful!"); // Display success message and reset form displayMessage('Success! Your verification profile
-has been created. You can now log in.', true); signupForm.reset(); handleRoleChange(); // Reset conditional fields // Optionally switch to the Login tab after a short delay setTimeout(() => { showTab('login'); formMessage.classList.add('hidden'); }, 3000);
-}); else if (type === 'logout') { title.textContent = "Confirm Log Out"; title.classList.add('text-sky-600'); message.textContent = "Are you sure you want to end your session? You will need to sign back in to access your profile."; actionBtn.textContent
-= "Log Out"; actionBtn.classList.add('bg-sky-600', 'hover:bg-sky-700'); actionBtn.onclick = () => { console.log("Mock user logged out successfully."); hideMockModal(); };
